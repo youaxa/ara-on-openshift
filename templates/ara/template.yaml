@@ -91,7 +91,8 @@ parameters:
 - name: ARA_RAM_LIMIT
   displayName: Memory Limit in Mi
   description: Maximum amount of memory the container can use
-  value: 512
+  value: '512'
+
 # extra params
 - name: D_ENV_JavaSDK_download_url
   displayName: Java SDK download URL
@@ -99,20 +100,20 @@ parameters:
     Dockerfile argument to download and install the specified version for Java SDK
     If left empty, the builder will install JavaSDK 1.8 from the distribution's repository
   value: ""
-  - name: D_ENV_JavaSDK_download_sha
+- name: D_ENV_JavaSDK_download_sha
   displayName: URL of the Java archive's sha
   description: |-
     Dockerfile argument to point to the location of the SHA file for the downloaded archive.
     Used to verify the download
     Is used only when choosing a downloadable build
   value: ""
-  - name: D_ENV_Maven_download_url
+- name: D_ENV_Maven_download_url
   displayName: Maven download URL
   description: |-
     Dockerfile argument to download and install the specified version for Maven
     If left empty, the builder will install Maven from the distribution's repository
   value: ""
-  - name: D_ENV_Maven_download_sha
+- name: D_ENV_Maven_download_sha
   displayName: URL of the maven archive's sha
   description: |-
     Dockerfile argument to point to the location of the SHA file for the downloaded archive.
@@ -332,31 +333,30 @@ objects:
           kind: ImageStreamTag
           name: ${APP_NAME}:artifact-latest
           namespace: ${NAMESPACE}
-
 - apiVersion: v1
-    kind: DeploymentConfig
-    metadata:
-      annotations:
-        description: Defines how to deploy the application server
-      labels:
-        app: ${APP_NAME}
-      name: ${APP_NAME}
-      namespace: ${NAMESPACE}
-    spec:
-      replicas: 1
-      revisionHistoryLimit: 5
-      selector:
-        app: ${APP_NAME}
-      template:
-        metadata:
-          labels:
-            app: ${APP_NAME}
-            deploymentconfig: ${APP_NAME}
-        spec:
-          containers:
-          - image: null
-            imagePullPolicy: Always
-            name: ${APP_NAME}
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 5
+    selector:
+      app: ${APP_NAME}
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          deploymentconfig: ${APP_NAME}
+      spec:
+        containers:
+        - image: null
+          imagePullPolicy: Always
+          name: ${APP_NAME}
 #            command:
 #              - /bin/bash
 #              - ....
@@ -365,9 +365,9 @@ objects:
 #              protocol: TCP
 #            - containerPort: 9990
 #              protocol: TCP
-            resources:
-              limits:
-                memory: "${ARA_RAM_LIMIT}Mi"
+          resources:
+            limits:
+              memory: "${ARA_RAM_LIMIT}Mi"
 #            livenessProbe:
 #              httpGet:
 #                path: /
@@ -383,38 +383,38 @@ objects:
 #            volumeMounts:
 #              - name: app-config
 #                mountPath: /opt/config
-            terminationMessagePath: /dev/termination-log
-            terminationMessagePolicy: File
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
 #          volumes:
 #            - name: app-config
 #              configMap:
 #                name: ${APP_PROPERTIES}
 #                defaultMode: 0420
 #                optional: false
-          dnsPolicy: ClusterFirst
-          restartPolicy: Always
-          schedulerName: default-scheduler
-          securityContext: {}
-          terminationGracePeriodSeconds: 30
-          automountServiceAccountToken: false
-      triggers:
-      - type: ConfigChange
-      - type: ImageChange
-        imageChangeParams:
-          automatic: true
-          containerNames:
-          - ${APP_NAME}
-          from:
-            kind: ImageStreamTag
-            name: ${APP_NAME}:latest
-            namespace: ${NAMESPACE}
-      strategy:
-        type: Rolling
-        activeDeadlineSeconds: 21600
-        resources: {}
-        rollingParams:
-          intervalSeconds: 1
-          maxSurge: 25%
-          maxUnavailable: 0
-          timeoutSeconds: 180
-          updatePeriodSeconds: 1
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        automountServiceAccountToken: false
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APP_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:latest
+          namespace: ${NAMESPACE}
+    strategy:
+      type: Rolling
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 0
+        timeoutSeconds: 180
+        updatePeriodSeconds: 1

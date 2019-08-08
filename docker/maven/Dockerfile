@@ -81,7 +81,7 @@ RUN	i_d=$(( [ "x${D_ENV_JavaSDK_download_url}" = "x" ] && echo "i" ) || echo "d"
 	chown -R 1001:0 ${D_ARG_S2I_destination} && \
 	chmod -R g=u ${D_ARG_S2I_destination} && \
 	chown -R 1001:0 ${D_ARG_S2I_scripts_dest} && \
-  chmod -R ug+x ${D_ARG_S2I_scripts_dest} && \
+  chmod -R ug+x ${D_ARG_S2I_scripts_dest}
 
 WORKDIR $HOME
 
