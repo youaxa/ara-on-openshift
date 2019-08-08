@@ -17,7 +17,8 @@ LABEL description="Docker image used to build the actual application using a mod
 COPY ./s2i/bin/ ${D_ARG_S2I_scripts_dest}
 
 # use variable to choose from install or download procedure for JavaSDK
-RUN	i_d=$(( [ "x${D_ENV_JavaSDK_download_url}" = "x" ] && echo "i" ) || echo "d") && \
+RUN yum -y install tar bzip2 && \
+	i_d=$(( [ "x${D_ENV_JavaSDK_download_url}" = "x" ] && echo "i" ) || echo "d") && \
 	if [ "d" = $i_d ]; then \
 		mkdir -p $JAVA_HOME; \
 		echo "---> Downloading java from ${D_ENV_JavaSDK_download_url}"; \
