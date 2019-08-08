@@ -1,0 +1,420 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ara-template
+  annotations:
+    description: |-
+      Template for building ARA with maven and starting the java app
+    iconClass: icon-openjdk
+    tags: maven,java
+    openshift.io/display-name: Onetrail Builder - maven
+    template.openshift.io/long-description: |-
+      Template for building ARA with maven and starting the java app
+parameters:
+- name: APP_NAME
+  displayName: Application name
+  value: ara
+  required: true
+- name: NAMESPACE
+  displayName: Namespace
+  description: The OpenShift Namespace where the resources are created
+  value: ara
+  required: true
+- name: BASEBUILDER_REPO_URL
+  displayName: Base builder repository URL
+  description: The URL of the repository with builder scripts specific for the app
+  value:
+  required: true
+- name: BASEBUILDER_REPO_AUTH
+  displayName: Base builder Secret for repository authentication
+  description: The referenced OKD secret used to authenticaate to the specified repository
+  value:
+- name: BASEBUILDER_REPO_REF
+  displayName: Base builder repository Reference
+  description: >-
+    Set this to a branch name, tag or other ref of your repository if you are
+    not using the default branch.
+  value: ""
+- name: BASEBUILDER_REPO_CONTEXT_DIR
+  displayName: Base builder repository Context Directory
+  description: >-
+    Set this to the relative path to your project if it is not in the root of
+    your repository.
+  value: ""
+- name: APPSRC_REPO_URL
+  displayName: Source code repository URL
+  description: The URL of the repository with your application source code.
+  value: "https://github.com/youaxa/ara-poc-open.git"
+  required: true
+#- name: APPSRC_REPO_AUTH
+#  displayName: Source code secret for repository authentication
+#  description: The referenced OKD secret used to authenticaate to the specified repository
+#  value: ""
+- name: APPSRC_REPO_REF
+  displayName: Source code repository Reference
+  description: >-
+    Set this to a branch name, tag or other ref of your repository if you are
+    not using the default branch.
+  value: ""
+- name: APPSRC_REPO_CONTEXT_DIR
+  displayName: Source code repository Context Directory
+  description: >-
+    Set this to the relative path to your project if it is not in the root of
+    your repository.
+  value: ""
+- name: APP_WAR
+  displayName: Name of app's war
+  required: true
+  value: "ara-2.0.6.RELEASE.jar"
+- name: RUNBUILDER_REPO_URL
+  displayName: Runtime builder repository URL
+  description: The URL of the repository with your application configuration scripts.
+  value: ""
+  required: true
+- name: RUNBUILDER_REPO_AUTH
+  displayName: Runtime builder secret for repository authentication
+  description: The referenced OKD secret used to authenticaate to the specified repository
+  value: ""
+  required: true
+- name: RUNBUILDER_REPO_REF
+  displayName: Runtime builder repository Reference
+  description: >-
+    Set this to a branch name, tag or other ref of your repository if you are
+    not using the default branch.
+  value: ""
+- name: RUNBUILDER_REPO_CONTEXT_DIR
+  displayName: Runtime builder repository Context Directory
+  description: >-
+    Set this to the relative path to your project if it is not in the root of
+    your repository.
+  value: ""
+- name: ARA_RAM_LIMIT
+  displayName: Memory Limit in Mi
+  description: Maximum amount of memory the container can use
+  value: 512
+# extra params
+- name: D_ENV_JavaSDK_download_url
+  displayName: Java SDK download URL
+  description: |-
+    Dockerfile argument to download and install the specified version for Java SDK
+    If left empty, the builder will install JavaSDK 1.8 from the distribution's repository
+  value: ""
+  - name: D_ENV_JavaSDK_download_sha
+  displayName: URL of the Java archive's sha
+  description: |-
+    Dockerfile argument to point to the location of the SHA file for the downloaded archive.
+    Used to verify the download
+    Is used only when choosing a downloadable build
+  value: ""
+  - name: D_ENV_Maven_download_url
+  displayName: Maven download URL
+  description: |-
+    Dockerfile argument to download and install the specified version for Maven
+    If left empty, the builder will install Maven from the distribution's repository
+  value: ""
+  - name: D_ENV_Maven_download_sha
+  displayName: URL of the maven archive's sha
+  description: |-
+    Dockerfile argument to point to the location of the SHA file for the downloaded archive.
+    Used to verify the download
+    Is used only when choosing a downloadable build
+  value: ""
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+    namespace: ${NAMESPACE}
+  spec: {}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+        description: |-
+          First layer build
+          Installs Maven to be used as a builder
+
+          Environment set:
+            HOME - defaults to /opt/java-builds
+            MAVEN_HOME - defaults to /usr/local/maven; only set when using a downloadable archive
+            adds JAVA_HOME/bin to PATH
+
+          Also sets working environment variables for download locations, both for Maven and JavaSDK
+          If they are not set/left empty, the Docker build will install SDK 1.8.0 and the default maven both with
+          yum package manager
+    labels:
+      app: ${APP_NAME}
+    name: maven-builder
+    namespace: ${NAMESPACE}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:builder-latest
+        namespace: ${NAMESPACE}
+    resources: {}
+    source:
+      type: Git
+      git:
+        ref: ${BASEBUILDER_REPO_REF}
+        uri: ${BASEBUILDER_REPO_URL}
+      contextDir: ${BASEBUILDER_REPO_CONTEXT_DIR}
+      sourceSecret:
+        name: ${BASEBUILDER_REPO_AUTH}
+    strategy:
+      type: Docker
+      dockerStrategy:
+        env:
+          - name: D_ENV_Maven_download_url
+            value: ${D_ENV_Maven_download_url}
+          - name: D_ENV_Maven_download_sha
+            value: ${D_ENV_Maven_download_sha}
+          - name: D_ENV_JavaSDK_download_url
+            value: ${D_ENV_JavaSDK_download_url}
+          - name: D_ENV_JavaSDK_download_sha
+            value: ${D_ENV_JavaSDK_download_sha}
+        from:
+          kind: DockerImage
+          name: "docker.io/centos:7"
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Second layer S2I build to obtain app's war
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}-artifact
+    namespace: ${NAMESPACE}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:artifact-latest
+        namespace: ${NAMESPACE}
+    source:
+      type: Git
+      git:
+        ref: ${APPSRC_REPO_REF}
+        uri: ${APPSRC_REPO_URL}
+      contextDir: ${APPSRC_REPO_CONTEXT_DIR}
+#      sourceSecret:
+#        name: ${APPSRC_REPO_AUTH}
+    strategy:
+      sourceStrategy:
+        env:
+          - name: HOME
+            value: /opt/java-builds
+          - name: APP_WAR
+            value: "${APP_WAR}"
+          - name: S2I_TAR_LOCATION
+            value: /opt/s2i/destination
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:builder-latest
+          namespace: ${NAMESPACE}
+        incremental: true
+      type: Source
+    successfulBuildsHistoryLimit: 2
+    failedBuildsHistoryLimit: 5
+    triggers:
+#      - github:
+#          secret: '${GITHUB_WEBHOOK_SECRET}'
+#        type: GitHub
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: |-
+        Third layer for runtime.
+        Sets up installable openjdk-jre from yum package repository
+
+        Sets up java in the specified JAVA_HOME location.
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}-java
+    namespace: ${NAMESPACE}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:runtime-latest
+        namespace: ${NAMESPACE}
+    resources: {}
+    source:
+      type: Git
+      sourceSecret:
+        name: ${RUNBUILDER_REPO_AUTH}
+      git:
+        uri: ${RUNBUILDER_REPO_URL}
+        ref: ${RUNBUILDER_REPO_REF}
+      contextDir: ${RUNBUILDER_REPO_CONTEXT_DIR}
+    strategy:
+      dockerStrategy:
+#        env:
+#          - name: D_ENV_Java_version
+#            value: "1.8.0"
+#          - name: JAVA_HOME
+#            value: "/usr/java"
+        from:
+          kind: DockerImage
+          name: "docker.io/centos:7"
+      type: Docker
+    successfulBuildsHistoryLimit: 2
+    failedBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Fourth layer build to combine artifact with the set up runtime image
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    runPolicy: Serial
+    source:
+#       env vars $HOME and $JBOSS_HOME are expected to be set in the runtime image
+#         change user is neeeded because COPY is done with root ownership
+#         change back the user 1001
+#         overwrite the CMD for starting the server with the one specific for the app
+      dockerfile: |-
+        FROM ${APP_NAME}:runtime-latest
+        COPY ${APP_WAR}  $HOME/
+        USER 0
+        RUN chown -R 1001:0 $HOME && \
+          chmod 664 $HOME/${APP_WAR}
+        USER 1001
+        CMD java -XX:MaxRAM=$ARA_RAM_LIMIT"m" -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -Dspring.profiles.active=dev -jar $HOME/${APP_WAR}
+      images:
+      - from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}-artifact:latest
+          namespace: ${NAMESPACE}
+        paths:
+#         !! source path needs to point to the exact file/folder being copied, not the containing folder
+#         expect the war archive to be in the $HOME directory of the artifact(source) image,
+#           - war archive was copied during the S2I build in the previous step (assemble script run inside the artifact_image)
+        - sourcePath: /opt/java-builds/${APP_WAR}
+          destinationDir: "."
+    strategy:
+      dockerStrategy:
+        env:
+          - name: ARA_RAM_LIMIT
+            value: ${ARA_RAM_LIMIT}
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:runtime-latest
+          namespace: ${NAMESPACE}
+    successfulBuildsHistoryLimit: 2
+    failedBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChange: {}
+    - type: ImageChange
+      imageChange:
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:artifact-latest
+          namespace: ${NAMESPACE}
+
+- apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        description: Defines how to deploy the application server
+      labels:
+        app: ${APP_NAME}
+      name: ${APP_NAME}
+      namespace: ${NAMESPACE}
+    spec:
+      replicas: 1
+      revisionHistoryLimit: 5
+      selector:
+        app: ${APP_NAME}
+      template:
+        metadata:
+          labels:
+            app: ${APP_NAME}
+            deploymentconfig: ${APP_NAME}
+        spec:
+          containers:
+          - image: null
+            imagePullPolicy: Always
+            name: ${APP_NAME}
+#            command:
+#              - /bin/bash
+#              - ....
+#            ports:
+#            - containerPort: 8080
+#              protocol: TCP
+#            - containerPort: 9990
+#              protocol: TCP
+            resources:
+              limits:
+                memory: "${ARA_RAM_LIMIT}Mi"
+#            livenessProbe:
+#              httpGet:
+#                path: /
+#                port: 8080
+#              initialDelaySeconds: 30
+#              timeoutSeconds: 3
+#            readinessProbe:
+#              httpGet:
+#                path: /
+#                port: 8080
+#              initialDelaySeconds: 30
+#              timeoutSeconds: 3
+#            volumeMounts:
+#              - name: app-config
+#                mountPath: /opt/config
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+#          volumes:
+#            - name: app-config
+#              configMap:
+#                name: ${APP_PROPERTIES}
+#                defaultMode: 0420
+#                optional: false
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          automountServiceAccountToken: false
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - ${APP_NAME}
+          from:
+            kind: ImageStreamTag
+            name: ${APP_NAME}:latest
+            namespace: ${NAMESPACE}
+      strategy:
+        type: Rolling
+        activeDeadlineSeconds: 21600
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 0
+          timeoutSeconds: 180
+          updatePeriodSeconds: 1

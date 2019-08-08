@@ -1,0 +1,8 @@
+BASEBUILDER_REPO_URL=git@github.com:dagniel/ara-on-openshift.git
+BASEBUILDER_REPO_AUTH=github-auth
+BASEBUILDER_REPO_CONTEXT_DIR="docker/maven"
+# needs to be synced with the pom.xml
+APP_WAR="ara-2.0.6.RELEASE.jar"
+RUNBUILDER_REPO_URL=git@github.com:dagniel/ara-on-openshift.git
+RUNBUILDER_REPO_AUTH=github-auth
+RUNBUILDER_REPO_CONTEXT_DIR="docker/openjdk-jre"
