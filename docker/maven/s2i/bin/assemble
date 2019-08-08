@@ -29,7 +29,7 @@ ls -al "$HOME/$PROJ_NAME"
 
 cd "$HOME/$PROJ_NAME"
 echo "---> Building with mvn $BUILD_ARGS"
-mvn $BUILD_ARGS
+mvn $BUILD_ARGS -e
 ec=$?
 
 if [ $ec -ne 0 ]; then

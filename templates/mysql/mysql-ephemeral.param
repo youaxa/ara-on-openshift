@@ -1,5 +1,7 @@
-MYSQL_DATABASE="ara-dev"
+MYSQL_DATABASE="ara_dev"
 NAMESPACE="ara"
-BASEBUILDER_REPO_URL=git@github.com:dagniel/ara-on-openshift.git
-BASEBUILDER_REPO_AUTH=github-auth
-BASEBUILDER_REPO_CONTEXT_DIR="docker/mysql"
+MEMORY_LIMIT="512Mi"
+
+#BASEBUILDER_REPO_URL=git@github.com:dagniel/ara-on-openshift.git
+#BASEBUILDER_REPO_AUTH=github-auth
+#BASEBUILDER_REPO_CONTEXT_DIR="docker/mysql"

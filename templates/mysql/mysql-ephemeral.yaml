@@ -50,49 +50,49 @@ objects:
     database-root-password: ${MYSQL_ROOT_PASSWORD}
     database-user: ${MYSQL_USER}
 
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      description: Image stream for custom mysql
-    labels:
-      app: ${DATABASE_SERVICE_NAME}
-    name: ${DATABASE_SERVICE_NAME}
-    namespace: ${NAMESPACE}
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Custom build for mysql to allow dash names
-    labels:
-      app: ${DATABASE_SERVICE_NAME}
-    name: ${DATABASE_SERVICE_NAME}
-    namespace: ${NAMESPACE}
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: ${DATABASE_SERVICE_NAME}:${MYSQL_VERSION}
-        namespace: ${NAMESPACE}
-    runPolicy: Serial
-    source:
-      type: Git
-      git:
-        ref: ${BASEBUILDER_REPO_REF}
-        uri: ${BASEBUILDER_REPO_URL}
-      contextDir: ${BASEBUILDER_REPO_CONTEXT_DIR}
-      sourceSecret:
-        name: ${BASEBUILDER_REPO_AUTH}
-    strategy:
-      type: Docker
-      dockerStrategy:
-        from:
-          kind: DockerImage
-          name: "docker.io/centos/mysql-57-centos7"
-    successfulBuildsHistoryLimit: 2
-    failedBuildsHistoryLimit: 5
-    triggers:
-    - type: ConfigChange
+#- apiVersion: v1
+#  kind: ImageStream
+#  metadata:
+#    annotations:
+#      description: Image stream for custom mysql
+#    labels:
+#      app: ${DATABASE_SERVICE_NAME}
+#    name: ${DATABASE_SERVICE_NAME}
+#    namespace: ${NAMESPACE}
+#- apiVersion: v1
+#  kind: BuildConfig
+#  metadata:
+#    annotations:
+#      description: Custom build for mysql to allow dash names
+#    labels:
+#      app: ${DATABASE_SERVICE_NAME}
+#    name: ${DATABASE_SERVICE_NAME}
+#    namespace: ${NAMESPACE}
+#  spec:
+#    output:
+#      to:
+#        kind: ImageStreamTag
+#        name: ${DATABASE_SERVICE_NAME}:${MYSQL_VERSION}
+#        namespace: ${NAMESPACE}
+#    runPolicy: Serial
+#    source:
+#      type: Git
+#      git:
+#        ref: ${BASEBUILDER_REPO_REF}
+#        uri: ${BASEBUILDER_REPO_URL}
+#      contextDir: ${BASEBUILDER_REPO_CONTEXT_DIR}
+#      sourceSecret:
+#        name: ${BASEBUILDER_REPO_AUTH}
+#    strategy:
+#      type: Docker
+#      dockerStrategy:
+#        from:
+#          kind: DockerImage
+#          name: "docker.io/centos/mysql-57-centos7"
+#    successfulBuildsHistoryLimit: 2
+#    failedBuildsHistoryLimit: 5
+#    triggers:
+#    - type: ConfigChange
 
 - apiVersion: v1
   kind: Service
@@ -132,12 +132,12 @@ objects:
       spec:
         containers:
         - capabilities: {}
-#          command:
-#          - /bin/bash
-#          - '-c'
-#          - |
-#            cp -f /tmp/conf/common.sh /usr/share/container-scripts/mysql/ && \
-#            $STI_SCRIPTS_PATH/run
+          command:
+            - /bin/bash
+            - '-c'
+            - |
+              cp -f /tmp/conf/ara.cnf /etc/my.cnf.d/ && \
+              /bin/run-mysqld
           env:
           - name: MYSQL_USER
             valueFrom:
@@ -159,7 +159,7 @@ objects:
               secretKeyRef:
                 key: database-name
                 name: ${DATABASE_SERVICE_NAME}
-          image: ' '
+          image: 'docker.io/centos/mysql-57-centos7'
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
@@ -190,29 +190,28 @@ objects:
           volumeMounts:
           - mountPath: /var/lib/mysql/data
             name: ${DATABASE_SERVICE_NAME}-data
-#          - mountPath: /tmp/conf
-#            name: hack-conf
+          - mountPath: /tmp/conf
+            name: ara-conf
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         volumes:
-        - emptyDir:
-            medium: ""
+        - emptyDir: {}
           name: ${DATABASE_SERVICE_NAME}-data
-#        - name: hack-conf
-#          configMap:
-#            name: mysql-startup
-#            defaultMode: 0770
+        - name: ara-conf
+          configMap:
+            name: mysql-conf
+            defaultMode: 0660
     triggers:
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - mysql
-        from:
-          kind: ImageStreamTag
-          name: ${DATABASE_SERVICE_NAME}:${MYSQL_VERSION}
-          namespace: ${NAMESPACE}
-        lastTriggeredImage: ""
-      type: ImageChange
+#    - imageChangeParams:
+#        automatic: true
+#        containerNames:
+#        - mysql
+#        from:
+#          kind: ImageStreamTag
+#          name: ${DATABASE_SERVICE_NAME}:${MYSQL_VERSION}
+#          namespace: openshift
+#        lastTriggeredImage: ""
+#      type: ImageChange
     - type: ConfigChange
   status: {}
 parameters:
@@ -258,24 +257,24 @@ parameters:
   name: MYSQL_VERSION
   required: true
   value: "5.7"
-- name: BASEBUILDER_REPO_URL
-  displayName: Base builder repository URL
-  description: The URL of the repository with builder scripts specific for the app
-  value:
-  required: true
-- name: BASEBUILDER_REPO_AUTH
-  displayName: Base builder Secret for repository authentication
-  description: The referenced OKD secret used to authenticaate to the specified repository
-  value:
-- name: BASEBUILDER_REPO_REF
-  displayName: Base builder repository Reference
-  description: >-
-    Set this to a branch name, tag or other ref of your repository if you are
-    not using the default branch.
-  value: ""
-- name: BASEBUILDER_REPO_CONTEXT_DIR
-  displayName: Base builder repository Context Directory
-  description: >-
-    Set this to the relative path to your project if it is not in the root of
-    your repository.
-  value: ""
+#- name: BASEBUILDER_REPO_URL
+#  displayName: Base builder repository URL
+#  description: The URL of the repository with builder scripts specific for the app
+#  value:
+#  required: true
+#- name: BASEBUILDER_REPO_AUTH
+#  displayName: Base builder Secret for repository authentication
+#  description: The referenced OKD secret used to authenticaate to the specified repository
+#  value:
+#- name: BASEBUILDER_REPO_REF
+#  displayName: Base builder repository Reference
+#  description: >-
+#    Set this to a branch name, tag or other ref of your repository if you are
+#    not using the default branch.
+#  value: ""
+#- name: BASEBUILDER_REPO_CONTEXT_DIR
+#  displayName: Base builder repository Context Directory
+#  description: >-
+#    Set this to the relative path to your project if it is not in the root of
+#    your repository.
+#  value: ""

@@ -220,15 +220,15 @@ objects:
           - name: MYSQL_URL
             value: "mysql.${NAMESPACE}.svc.cluster.local:3306"
           - name: MYSQL_DB
-              valueFrom:
-                secretKeyRef:
-                  name: ${MYSQL_AUTH_REF}
-                  key: database-name
+            valueFrom:
+              secretKeyRef:
+                name: ${MYSQL_AUTH_REF}
+                key: database-name
           - name: MYSQL_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: ${MYSQL_AUTH_REF}
-                  key: database-root-password
+            valueFrom:
+              secretKeyRef:
+                name: ${MYSQL_AUTH_REF}
+                key: database-root-password
         from:
           kind: ImageStreamTag
           name: ${APP_NAME}:builder-latest
