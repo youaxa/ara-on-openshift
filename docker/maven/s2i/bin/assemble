@@ -7,8 +7,8 @@ if [ -z "$S2I_TAR_LOCATION" ]; then
   echo "=====using local S2I_TAR_LOCATION: $S2I_TAR_LOCATION"
 fi
 PROJ_NAME="app"
-#!!!  issue with maven's unset user.dir system property; it does not read it from the OS so it has ot be specifically passed as an option  !!!
-BUILD_ARGS="clean install -Pdev -DskipPitest -Dmaven.test.skip=true"
+db_url="jdbc:mysql://$MYSQL_URL/$MYSQL_DB?useUnicode=yes&amp;characterEncoding=UTF-8"
+BUILD_ARGS="clean install -Pdev -DskipPitest -Dmaven.test.skip=true -Duser.home=$HOME -Dliquibase.database.url=$db_url -Dliquibase.database.password=$MYSQL_PASS"
 
 
 #restore preinstalled dependencies if saved with the save-artifacts script(subsequent build)

@@ -92,6 +92,9 @@ parameters:
   displayName: Memory Limit in Mi
   description: Maximum amount of memory the container can use
   value: '512'
+- name: MYSQL_AUTH_REF
+  displayName: reference to Secret holding auth to MySQL
+  value: mysql
 
 # extra params
 - name: D_ENV_JavaSDK_download_url
@@ -214,6 +217,18 @@ objects:
             value: "${APP_WAR}"
           - name: S2I_TAR_LOCATION
             value: /opt/s2i/destination
+          - name: MYSQL_URL
+            value: "mysql.${NAMESPACE}.svc.cluster.local:3306"
+          - name: MYSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  - name: ${MYSQL_AUTH_REF}
+                    key: database-name
+          - name: MYSQL_PASS
+              valueFrom:
+                secretKeyRef:
+                  - name: ${MYSQL_AUTH_REF}
+                    key: database-root-password
         from:
           kind: ImageStreamTag
           name: ${APP_NAME}:builder-latest
