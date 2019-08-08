@@ -4,7 +4,7 @@
 # check for env vars or use defaults
 if [ -z "$S2I_TAR_LOCATION" ]; then
   S2I_TAR_LOCATION="/opt/s2i/destination"
-  echo "=====using local S2I_TAR_LOCATION: $S2I_TAR_LOCATION"
+  echo "---> using local S2I_TAR_LOCATION: $S2I_TAR_LOCATION"
 fi
 PROJ_NAME="app"
 db_url="jdbc:mysql://$MYSQL_URL/$MYSQL_DB?useUnicode=yes&amp;characterEncoding=UTF-8"
@@ -13,32 +13,33 @@ BUILD_ARGS="clean install -Pdev -DskipPitest -Dmaven.test.skip=true -Duser.home=
 
 #restore preinstalled dependencies if saved with the save-artifacts script(subsequent build)
 if [[ ( -e "$S2I_TAR_LOCATION/artifacts/.m2/repository" ) && ( -d "$S2I_TAR_LOCATION/artifacts/.m2/repository" ) ]]; then
-  echo "=====Restoring saved artifacts from prior build..."
+  echo "---> Restoring saved artifacts from prior build..."
   mv "$S2I_TAR_LOCATION/artifacts/.m2/repository" "$HOME/.m2/"
   ls -al "$HOME/.m2/"
 else
-  echo "=====No dependencies in $S2I_TAR_LOCATION/artifacts/.m2/repository found"
+  echo "---> No dependencies in $S2I_TAR_LOCATION/artifacts/.m2/repository found"
 fi
 
 # make project directory
 mkdir -p "$HOME/$PROJ_NAME"
 
-echo "=====copy application from $S2I_TAR_LOCATION/src/ to $HOME/$PROJ_NAME"
+echo "---> copy application from $S2I_TAR_LOCATION/src/ to $HOME/$PROJ_NAME"
 cp -Rf "$S2I_TAR_LOCATION/src/." "$HOME/$PROJ_NAME"
 ls -al "$HOME/$PROJ_NAME"
 
 cd "$HOME/$PROJ_NAME"
+echo "---> Building with mvn $BUILD_ARGS"
 mvn $BUILD_ARGS
 ec=$?
 
 if [ $ec -ne 0 ]; then
-  echo "=====Aborting due to error code $ec from mvn package"
+  echo "ERROR: Aborting due to error code $ec from mvn package"
   exit $ec
 fi
 
-echo "=====copy all war archives to $HOME directory to be available for deploy"
+echo "---> copy all war archives to $HOME directory to be available for deploy"
 cp "$HOME/$PROJ_NAME/final/target/$APP_WAR" "$HOME/"
-#echo "=====copy the properties file, needed to run, to $HOME directory to be available for deploy"
+#echo "---> copy the properties file, needed to run, to $HOME directory to be available for deploy"
 # expect $APP_PROP_FILE to be set on the environment
 #cp "$HOME/$PROJ_NAME/$APP_PROP_FILE" $HOME/
 
