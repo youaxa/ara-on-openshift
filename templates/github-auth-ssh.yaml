@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-auth
+  annotations:
+    description: |-
+      Authentication secret for repository at git@github.com:dagniel/ara-on-openshift.git
+type: kubernetes.io/ssh-auth
+stringData:
+  ssh-privatekey: |-
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEArlske9wKZspRPimk+PnRwFTtwj9jQdkOK3txtEdvxl94/6LJ
+    4IV0+1s8HyQEzOGiZ+jDP0JgFGEdSi8vVnpWKV5IhW5aKksMgXzb09QoVz7vMBIC
+    sMPSCUTDSmuxCS83YI4WR38nKPU3VRB4v0Cuf3q0eVHcuN7vf6x++ALg24J02IQx
+    OILkUWxho+A4OMB+MfWC8bKyU+st55gn6lohx4fB0qzdc+CNy2882PRnPlF8rZBQ
+    5Fez8hNLDeaqSXUo+wnvslbEi1v521CS+isd/AVb4PIbVFhocssIIcy5TMskTmli
+    is6NJaz/hW4KFoYHzekXhYS3mSQ2XagzFTbkvwIDAQABAoIBAAhI2GDyQaREtLuJ
+    awdRh3/mCS4TqPm2AJBcWzi/tDXuz2cGKyV58ecHnMG2CmxZxEe/rZdR5hLR0nx1
+    5X/sbC+nBTch2TLtQfjdH+zexdPvb5oPIQWZKF+8XrMojs7q6WyzE6fuCMRPcoOe
+    Nr6Pqjrwb6bcFurJ3QNqBNZv/JMxeYjSoxKmv+ine0gmHIhjCHIRy9mXjaxWdUi3
+    yf7WbH1c4mvZt4HQnelWM1i+ELaloaCz0vLX4w8T7LLIhzaaow8hRWSF8EiXFMJM
+    cz7YFSytLaoqaUvQgaLunq+tBCYWjRbxbwTHxehFE/b7wLX3m3t13uoGMw6YVDWV
+    y3Yl9oECgYEA5lf4YzBmkkC3K2FdufqYec0uBO91ml/Ocuk96V5UgaHCHpEQ2Nrw
+    F5hZLdKFIhxI9ktIWHLd4qOWEw8QC1NdyAs4JVfIcgAYhNZZz1MKZzg31jWsul0A
+    6WaRNSgouR12FQRq9skpcUHN2SaLTUDoryZbk2b7tVxnAMM2Fi0xX58CgYEAwca9
+    I5aDCUbaDAjZQA0x+nAasdnXNt+MkPhYYIe2blig/XY2S6oxbfuA3+yBPIZM5oqb
+    2ky95R84WH3/ZaaGY5YvIygiZbzOR7DYto6vQ3HkrVkOLaYimTyLPibhV+TLA/xY
+    XHKoq2yWSwfub767+TQvG+Lsjr/+6SfYdbJ35uECgYEAxrGTnVwe3oHcfxsaEldM
+    N6T50WAN/gAuwYjY0vl/w+KY5G0WLzmMaY4NPy2dkfL8LRh7a3CKXfnmdsJDgMGE
+    4A5tfCjgyxWyEMQl7GUhUDB6WdkrCgc3xh2nnEbr+eKj/TU2X3LewMeWnX5WI2me
+    TZe03s2yyprObyX0/eQ19tkCgYBlvd2NE/fVJRhTfUnkMYluPvIlM4WmUBXUADEW
+    7erBYVOWAT1c2Q1++7Cc4eaxSqqR2XEfW2/RH2VMQUuZqaeiHja9tNLqrAl65sXC
+    hIRNWz2ALuQc38AGyR0rEur6ZSya+SHD2IfrCeaXmqB8l57Gp7mcYLdn9DL5ZGxo
+    z73YwQKBgCZOHbyj7n3N7pV4uBx+J2GR/yJtffXUqWimi7GMblTJtQisWy6l9C72
+    zpsnSipcm63Or7lXT1poB1hvMyPdgmco7ylMkENNuHdaa0uy6nCsn25KOu7G45lD
+    Gacboq6xuetrG9lvniDhTxE8QBlj184+xE4hDdRDW7xCZybEeta4
+    -----END RSA PRIVATE KEY-----
+
