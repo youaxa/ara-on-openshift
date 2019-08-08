@@ -44,8 +44,9 @@ RUN	i_d=$(( [ "x${D_ENV_JavaSDK_download_url}" = "x" ] && echo "i" ) || echo "d"
 	  ln -s $(readlink -f /usr/bin/javac | sed "s/bin\/javac//") $JAVA_HOME; \
 	fi && \
 	echo "---> Testing java installed correctly" && \
-  javac -version && \
-  mkdir -p $HOME/.m2 && \
+  javac -version
+# separate layers to use caching
+RUN mkdir -p $HOME/.m2 && \
 # use variable to choose from install or download procedure for Maven
 	i_d=$(( [ "x${D_ENV_Maven_download_url}" = "x" ] && echo "i" ) || echo "d") && \
 	if [ "d" = $i_d ]; then \
