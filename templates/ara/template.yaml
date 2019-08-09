@@ -7,7 +7,7 @@ metadata:
       Template for building ARA with maven and starting the java app
     iconClass: icon-openjdk
     tags: maven,java
-    openshift.io/display-name: Onetrail Builder - maven
+    openshift.io/display-name: ARA on Openshift
     template.openshift.io/long-description: |-
       Template for building ARA with maven and starting the java app
 parameters:
@@ -20,10 +20,16 @@ parameters:
   description: The OpenShift Namespace where the resources are created
   value: ara
   required: true
+- name: APPLICATION_HOSTNAME
+  displayName: Application Hostname
+  description: >-
+    The exposed hostname that will route to the ara service, if left blank
+    a value will be defaulted.
+  value: ""
 - name: BASEBUILDER_REPO_URL
   displayName: Base builder repository URL
   description: The URL of the repository with builder scripts specific for the app
-  value:
+  value: "https://github.com/dagniel/ara-on-openshift.git"
   required: true
 - name: BASEBUILDER_REPO_AUTH
   displayName: Base builder Secret for repository authentication
@@ -40,16 +46,16 @@ parameters:
   description: >-
     Set this to the relative path to your project if it is not in the root of
     your repository.
-  value: ""
+  value: "docker/maven"
 - name: APPSRC_REPO_URL
   displayName: Source code repository URL
   description: The URL of the repository with your application source code.
   value: "https://github.com/youaxa/ara-poc-open.git"
   required: true
-#- name: APPSRC_REPO_AUTH
-#  displayName: Source code secret for repository authentication
-#  description: The referenced OKD secret used to authenticaate to the specified repository
-#  value: ""
+- name: APPSRC_REPO_AUTH
+  displayName: Source code secret for repository authentication
+  description: The referenced OKD secret used to authenticaate to the specified repository
+  value: ""
 - name: APPSRC_REPO_REF
   displayName: Source code repository Reference
   description: >-
@@ -69,13 +75,12 @@ parameters:
 - name: RUNBUILDER_REPO_URL
   displayName: Runtime builder repository URL
   description: The URL of the repository with your application configuration scripts.
-  value: ""
+  value: "https://github.com/dagniel/ara-on-openshift.git"
   required: true
 - name: RUNBUILDER_REPO_AUTH
   displayName: Runtime builder secret for repository authentication
   description: The referenced OKD secret used to authenticaate to the specified repository
   value: ""
-  required: true
 - name: RUNBUILDER_REPO_REF
   displayName: Runtime builder repository Reference
   description: >-
@@ -87,7 +92,7 @@ parameters:
   description: >-
     Set this to the relative path to your project if it is not in the root of
     your repository.
-  value: ""
+  value: "docker/openjdk-jre"
 - name: ARA_RAM_LIMIT
   displayName: Memory Limit in Mi
   description: Maximum amount of memory the container can use
@@ -115,14 +120,14 @@ parameters:
   description: |-
     Dockerfile argument to download and install the specified version for Maven
     If left empty, the builder will install Maven from the distribution's repository
-  value: ""
+  value: "https://www.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz"
 - name: D_ENV_Maven_download_sha
   displayName: URL of the maven archive's sha
   description: |-
     Dockerfile argument to point to the location of the SHA file for the downloaded archive.
     Used to verify the download
     Is used only when choosing a downloadable build
-  value: ""
+  value: "https://www.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz.sha512"
 objects:
 - apiVersion: v1
   kind: ImageStream
@@ -165,8 +170,8 @@ objects:
         ref: ${BASEBUILDER_REPO_REF}
         uri: ${BASEBUILDER_REPO_URL}
       contextDir: ${BASEBUILDER_REPO_CONTEXT_DIR}
-      sourceSecret:
-        name: ${BASEBUILDER_REPO_AUTH}
+#      sourceSecret:
+#        name: ${BASEBUILDER_REPO_AUTH}
     strategy:
       type: Docker
       dockerStrategy:
@@ -265,8 +270,8 @@ objects:
     resources: {}
     source:
       type: Git
-      sourceSecret:
-        name: ${RUNBUILDER_REPO_AUTH}
+#      sourceSecret:
+#        name: ${RUNBUILDER_REPO_AUTH}
       git:
         uri: ${RUNBUILDER_REPO_URL}
         ref: ${RUNBUILDER_REPO_REF}
@@ -319,7 +324,7 @@ objects:
       images:
       - from:
           kind: ImageStreamTag
-          name: ${APP_NAME}-artifact:latest
+          name: ${APP_NAME}:artifact-latest
           namespace: ${NAMESPACE}
         paths:
 #         !! source path needs to point to the exact file/folder being copied, not the containing folder
@@ -375,26 +380,26 @@ objects:
 #            command:
 #              - /bin/bash
 #              - ....
-#            ports:
-#            - containerPort: 8080
-#              protocol: TCP
+          ports:
+          - containerPort: 8080
+            protocol: TCP
 #            - containerPort: 9990
 #              protocol: TCP
           resources:
             limits:
               memory: "${ARA_RAM_LIMIT}Mi"
-#            livenessProbe:
-#              httpGet:
-#                path: /
-#                port: 8080
-#              initialDelaySeconds: 30
-#              timeoutSeconds: 3
-#            readinessProbe:
-#              httpGet:
-#                path: /
-#                port: 8080
-#              initialDelaySeconds: 30
-#              timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
 #            volumeMounts:
 #              - name: app-config
 #                mountPath: /opt/config
@@ -433,3 +438,34 @@ objects:
         maxUnavailable: 0
         timeoutSeconds: 180
         updatePeriodSeconds: 1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ${APP_NAME}
+    name: ${APP_NAME}
+    namespace: ${NAMESPACE}
+  spec:
+    ports:
+    - name: ara
+      port: 8800
+      protocol: TCP
+      targetPort: 8800
+    selector:
+      deploymentconfig: ${APP_NAME}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: ${APP_NAME}
+    namespace: ${NAMESPACE}
+    labels:
+      app: ${APP_NAME}
+    annotations:
+      openshift.io/host.generated: "true"
+  spec:
+    host: '${APPLICATION_HOSTNAME}'
+    port:
+      targetPort: ara
+    to:
+      kind: Service
+      name: ${APP_NAME}

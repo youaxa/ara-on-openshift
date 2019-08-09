@@ -1,5 +1,5 @@
 MYSQL_DATABASE="ara_dev"
-NAMESPACE="ara"
+NAMESPACE="ara-tst"
 MEMORY_LIMIT="512Mi"
 
 #BASEBUILDER_REPO_URL=git@github.com:dagniel/ara-on-openshift.git

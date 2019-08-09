@@ -18,7 +18,7 @@ metadata:
 
       WARNING: Any data stored will be lost upon pod destruction. Only use this template for testing
     iconClass: icon-mysql-database
-    openshift.io/display-name: MySQL (Ephemeral)
+    openshift.io/display-name: MySQL 5.5 (Ephemeral)
     openshift.io/documentation-url: https://docs.openshift.org/latest/using_images/db_images/mysql.html
     openshift.io/long-description: This template provides a standalone MySQL server
       with a database created.  The database is not stored on persistent storage,
@@ -29,8 +29,7 @@ metadata:
     openshift.io/support-url: https://access.redhat.com
     tags: database,mysql
   creationTimestamp: 2019-06-06T16:24:31Z
-  name: mysql-ephemeral
-  namespace: openshift
+  name: custom-mysql-ephemeral
   resourceVersion: "1471"
   selfLink: /apis/template.openshift.io/v1/namespaces/openshift/templates/mysql-ephemeral
   uid: 9024fde4-8877-11e9-919c-fa163e752353
@@ -159,13 +158,13 @@ objects:
               secretKeyRef:
                 key: database-name
                 name: ${DATABASE_SERVICE_NAME}
-          image: 'docker.io/centos/mysql-57-centos7'
+          image: 'quay.io/dagniel/sclorg-mysql-container:5.5'
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
             tcpSocket:
               port: 3306
-            timeoutSeconds: 1
+            timeoutSeconds: 10
           name: mysql
           ports:
           - containerPort: 3306
@@ -179,7 +178,7 @@ objects:
               - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
                 -e 'SELECT 1'
             initialDelaySeconds: 5
-            timeoutSeconds: 1
+            timeoutSeconds: 10
           resources:
             limits:
               memory: ${MEMORY_LIMIT}
@@ -202,16 +201,6 @@ objects:
             name: mysql-conf
             defaultMode: 0660
     triggers:
-#    - imageChangeParams:
-#        automatic: true
-#        containerNames:
-#        - mysql
-#        from:
-#          kind: ImageStreamTag
-#          name: ${DATABASE_SERVICE_NAME}:${MYSQL_VERSION}
-#          namespace: openshift
-#        lastTriggeredImage: ""
-#      type: ImageChange
     - type: ConfigChange
   status: {}
 parameters:
@@ -220,10 +209,10 @@ parameters:
   name: MEMORY_LIMIT
   required: true
   value: 512Mi
-- description: The OpenShift Namespace where the ImageStream resides.
+- description: The OpenShift Namespace where all objects are created.
   displayName: Namespace
   name: NAMESPACE
-  value: openshift
+  value:
 - description: The name of the OpenShift Service exposed for the database.
   displayName: Database Service Name
   name: DATABASE_SERVICE_NAME
@@ -252,11 +241,11 @@ parameters:
   name: MYSQL_DATABASE
   required: true
   value: sampledb
-- description: Version of MySQL image to be used (5.7, or latest).
-  displayName: Version of MySQL Image
-  name: MYSQL_VERSION
-  required: true
-  value: "5.7"
+#- description: Version of MySQL image to be used (5.7, or latest).
+#  displayName: Version of MySQL Image
+#  name: MYSQL_VERSION
+#  required: true
+#  value: "5.7"
 #- name: BASEBUILDER_REPO_URL
 #  displayName: Base builder repository URL
 #  description: The URL of the repository with builder scripts specific for the app
