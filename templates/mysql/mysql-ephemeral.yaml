@@ -135,7 +135,7 @@ objects:
             - /bin/bash
             - '-c'
             - |
-              cp -f /tmp/conf/ara.cnf /etc/my.cnf.d/ && \
+              cp -f /opt/conf/ara.cnf /opt/rh/mysql55/root/etc/my.cnf.d/ && \
               /bin/run-mysqld
           env:
           - name: MYSQL_USER
@@ -189,7 +189,7 @@ objects:
           volumeMounts:
           - mountPath: /var/lib/mysql/data
             name: ${DATABASE_SERVICE_NAME}-data
-          - mountPath: /tmp/conf
+          - mountPath: /opt/conf
             name: ara-conf
         dnsPolicy: ClusterFirst
         restartPolicy: Always
