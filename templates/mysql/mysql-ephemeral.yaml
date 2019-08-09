@@ -199,7 +199,7 @@ objects:
         - name: ara-conf
           configMap:
             name: mysql-conf
-            defaultMode: 0660
+            defaultMode: 0666
     triggers:
     - type: ConfigChange
   status: {}
