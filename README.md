@@ -47,6 +47,6 @@ oc process -f templates/mysql/mysql-ephemeral.yaml --param-file=templates/mysql/
 # 2.1 check and modify accordingly the parameters from templates/ara/template.param
 
 # 2.2 create all objects from template using parameter file above
-oc process -f templates/ara/template.yaml --param-file=templates/ara/template.param | oc create-n $OPENSHIFT_NAMESPACE -f -
+oc process -f templates/ara/template.yaml --param-file=templates/ara/template.param | oc create -n $OPENSHIFT_NAMESPACE -f -
 
 ```
