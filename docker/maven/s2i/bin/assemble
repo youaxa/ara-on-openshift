@@ -8,7 +8,7 @@ if [ -z "$S2I_TAR_LOCATION" ]; then
 fi
 PROJ_NAME="app"
 db_url="jdbc:mysql://$MYSQL_URL/$MYSQL_DB?useUnicode=yes&amp;characterEncoding=UTF-8"
-BUILD_ARGS="clean install -Pdev -DskipPitest -Dmaven.test.skip=true -Duser.home=$HOME -Dliquibase.database.url=$db_url -Dliquibase.database.password=$MYSQL_PASS"
+BUILD_ARGS="clean install -Pdev -DskipPitest -Dmaven.test.skip=true -Duser.home=$HOME -Dliquibase.database.url=$db_url -Dliquibase.database.username=root -Dliquibase.database.password=$MYSQL_PASS"
 
 
 #restore preinstalled dependencies if saved with the save-artifacts script(subsequent build)
